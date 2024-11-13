@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 对话界面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .chat-messages::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            clear: both;
+        }
+        .ai-message {
+            background-color: #e6e6e6;
+            float: left;
+            border-bottom-left-radius: 0;
+        }
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            float: right;
+            border-bottom-right-radius: 0;
+        }
+        .input-area {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        #send-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-messages" class="chat-messages">
+            <!-- 消息将在这里动态添加 -->
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="输入您的消息...">
+            <button id="send-button">发送</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var message = $('#user-input').val().trim();
+            if (!message) {
+                alert("请输入消息！");
+                return;
+            }
+            $('#chat-messages').append('<div class="message user-message">' + message + '</div>');
+            $('#user-input').val('');
+
+            console.log("Sending message:", message);
+            $.ajax({
+                url: '/chat',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({message: message, user_id: 'user123'}),
+                success: function(response) {
+                    console.log("Received response:", response);
+                    if (response.message) {
+                        $('#chat-messages').append('<div class="message ai-message">' + response.message + '</div>');
+                    } else if (response.error) {
+                        $('#chat-messages').append('<div class="message ai-message">Error: ' + response.error + '</div>');
+                    } else {
+                        $('#chat-messages').append('<div class="message ai-message">Unable to retrieve message.</div>');
+                    }
+                    $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    console.error("Response:", xhr.responseText);
+                    $('#chat-messages').append('<div class="message ai-message">Error: Failed to get response from bot.</div>');
+                }
+            });
+        }
+
+        $('#send-button').on('click', sendMessage);
+        $('#user-input').on('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

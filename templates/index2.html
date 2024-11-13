@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Bot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Chat with Bot</h1>
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+    function sendMessage() {
+        var message = $('#user-input').val();
+        console.log("Sending message:", message);
+        $.ajax({
+            url: '/chat',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({message: message, user_id: 'user123'}),
+            success: function(response) {
+                console.log("Received response:", response);
+                $('#chat-messages').append('<p><strong>You:</strong> ' + message + '</p>');
+                
+                if (response.message) {
+                    if (response.message.includes("I'm processing your request")) {
+                        $('#chat-messages').append('<p><strong>Bot:</strong> ' + response.message + '</p>');
+                        // 可以在这里添加一个延迟后的重新查询
+                        setTimeout(function() {
+                            checkBotResponse(message);
+                        }, 5000);  // 5秒后重新查询
+                    } else {
+                        $('#chat-messages').append('<p><strong>Bot:</strong> ' + response.message + '</p>');
+                    }
+                } else if (response.error) {
+                    $('#chat-messages').append('<p><strong>Error:</strong> ' + response.error + '</p>');
+                } else {
+                    $('#chat-messages').append('<p><strong>Bot Response:</strong> Unable to retrieve message.</p>');
+                }
+                
+                $('#user-input').val('');
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+                console.error("Response:", xhr.responseText);
+                $('#chat-messages').append('<p><strong>Error:</strong> Failed to get response from bot.</p>');
+            }
+        });
+    }
+
+    function checkBotResponse(originalMessage) {
+        $.ajax({
+            url: '/check_response',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({message: originalMessage, user_id: 'user123'}),
+            success: function(response) {
+                if (response.message && !response.message.includes("I'm processing your request")) {
+                    $('#chat-messages').append('<p><strong>Bot:</strong> ' + response.message + '</p>');
+                } else {
+                    // 如果仍在处理，可以继续重试
+                    setTimeout(function() {
+                        checkBotResponse(originalMessage);
+                    }, 5000);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error checking response:", error);
+            }
+        });
+    }
+    </script>
+</body>
+</html>
