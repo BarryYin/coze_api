@@ -32,10 +32,15 @@ INFO:werkzeug:Press CTRL+C to quit
 - 如果你觉得我为你节省了时间，请给我买杯咖啡
 
 
+<img src="pay.png" width = 300 height = 400>
+
+
+
 
 - 如果你还需要我帮助调整输出，请联系我
 
 
+<img src="connect.png" width = 300 height = 400>
 
 ### 版权
 
